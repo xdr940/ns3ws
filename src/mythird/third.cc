@@ -85,20 +85,21 @@ main (int argc, char *argv[])
 
   //构建拓扑
   NodeContainer csmaNodes;
-  csmaNodes.Add (p2pNodes.Get (1));
+  csmaNodes.Add (p2pNodes.Get (1));//get 访问1号节点并装载?
   csmaNodes.Create (nCsma);
 
-  //
+  //设置CSMA信道属性
   CsmaHelper csma;
   csma.SetChannelAttribute ("DataRate", StringValue ("100Mbps"));
   csma.SetChannelAttribute ("Delay", TimeValue (NanoSeconds (6560)));
 
+  //csma 设备节点
   NetDeviceContainer csmaDevices;
   csmaDevices = csma.Install (csmaNodes);
 
   NodeContainer wifiStaNodes;
-  wifiStaNodes.Create (nWifi);
-  NodeContainer wifiApNode = p2pNodes.Get (0);
+  wifiStaNodes.Create (nWifi);//建立站设备数量
+  NodeContainer wifiApNode = p2pNodes.Get (0);//
 
   YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();
   YansWifiPhyHelper phy;

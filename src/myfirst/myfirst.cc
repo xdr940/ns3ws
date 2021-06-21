@@ -47,56 +47,58 @@ main (int argc, char *argv[])
   LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
 
 
-//构建网络拓扑
+//1. nodes 构建网络拓扑
 
   //构建两个拓扑节点
   NodeContainer nodes;
   nodes.Create (2);
 
   
-  //创建信道
+//2. channel & devices 
+  //2.1 创建信道
   PointToPointHelper pointToPoint;
   //配置信道属性
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));//传播速率定义
   pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));//传播延时设定
 
-
+  //2.2 devices
   NetDeviceContainer devices;//创建设备
   devices = pointToPoint.Install (nodes);//将设备装载到信道中
 
 
 
-//安装协议族
+//3. protocol stack安装协议族
   InternetStackHelper stack;
   stack.Install (nodes);//为所有node节点安装协议栈
 
-
+//4. address
+  //4.1 ip define
   Ipv4AddressHelper address;//地址分配助手
   address.SetBase ("10.1.1.0", "255.255.255.0");//起始地址 和 子网掩码
-
-  Ipv4InterfaceContainer interfaces = address.Assign (devices);//两个设备分别被分给了10.1.1.1 以及10.1.1.2
+  //4.2 ip distribution
   //interface 将一个设备和一个地址关联起来
+  Ipv4InterfaceContainer interfaces = address.Assign (devices);//两个设备分别被分给了10.1.1.1 以及10.1.1.2
 
-//应用层安装
-  
-  //在节点1中创建了一个服务器端回显服务应用echoSever。
+
+//5. application 应用层安装
+  //5.1 nodes1 app
+    //5.1.1
+    //在节点1中创建了一个服务器端回显服务应用echoSever。
   UdpEchoServerHelper echoServer (9);//服务端口号设置
-  //节点1中安装 服务端 应用程序
+    //5.1.2
+    //节点1中安装 服务端 应用程序
   ApplicationContainer serverApps = echoServer.Install (nodes.Get (1));
   serverApps.Start (Seconds (1.0));
   serverApps.Stop (Seconds (10.0));
   //echoSever在模拟自启动后1.0s时开始监听并接收9号端口的数据在接收到数据包后向echoClient返回一个相同大小的UDP数据包，并在10.0s停止。
 
 
-
-
-
-  //配置客户端属性
+  //5.2 nodes 2 app
+    //5.2.1配置客户端属性
   UdpEchoClientHelper echoClient (interfaces.GetAddress (1), 9);
   echoClient.SetAttribute ("MaxPackets", UintegerValue (1));
   echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
   echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
-
 
   //节点0中安装客户端属性
   ApplicationContainer clientApps = echoClient.Install (nodes.Get (0));
@@ -104,7 +106,9 @@ main (int argc, char *argv[])
   clientApps.Stop (Seconds (10.0));
 
   
+  //6.run
   Simulator::Run ();
+  //7.del
   Simulator::Destroy ();
   return 0;
 }
