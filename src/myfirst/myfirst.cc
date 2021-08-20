@@ -23,6 +23,7 @@
 #include "ns3/internet-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
+#include "ns3/netanim-module.h"
 
 // Default Network Topology
 //
@@ -38,7 +39,7 @@ NS_LOG_COMPONENT_DEFINE ("FirstScriptExample");//定义日志组件
 int
 main (int argc, char *argv[])
 {
-  cout<<"git src"<<endl;
+  cout<<"first example"<<endl;
   CommandLine cmd (__FILE__);// /home/roit/..../myfirst.cc
   cmd.Parse (argc, argv);
   
@@ -61,7 +62,7 @@ main (int argc, char *argv[])
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));//传播速率定义
   pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));//传播延时设定
 
-  //2.2 devices
+  //2.2 channle in stall nodes, get devices
   NetDeviceContainer devices;//创建设备
   devices = pointToPoint.Install (nodes);//将设备装载到信道中
 
@@ -77,14 +78,14 @@ main (int argc, char *argv[])
   address.SetBase ("10.1.1.0", "255.255.255.0");//起始地址 和 子网掩码
   //4.2 ip distribution
   //interface 将一个设备和一个地址关联起来
-  Ipv4InterfaceContainer interfaces = address.Assign (devices);//两个设备分别被分给了10.1.1.1 以及10.1.1.2
+  Ipv4InterfaceContainer interfaces = address.Assign (devices);//两个设备分别被分给了10.1.1.1 以及10.1.1.2,不用挨个操作
 
 
 //5. application 应用层安装
   //5.1 nodes1 app
     //5.1.1
     //在节点1中创建了一个服务器端回显服务应用echoSever。
-  UdpEchoServerHelper echoServer (9);//服务端口号设置
+  UdpEchoServerHelper echoServer (19);//服务端口号设置
     //5.1.2
     //节点1中安装 服务端 应用程序
   ApplicationContainer serverApps = echoServer.Install (nodes.Get (1));
@@ -94,18 +95,28 @@ main (int argc, char *argv[])
 
 
   //5.2 nodes 2 app
-    //5.2.1配置客户端属性
-  UdpEchoClientHelper echoClient (interfaces.GetAddress (1), 9);
+    //5.2.1创建客户端
+  cout<<interfaces.GetAddress (1)<<endl;//get 10.1.1.2
+  UdpEchoClientHelper echoClient (interfaces.GetAddress (1), 19);
+    //5.2.2配置客户端属性
   echoClient.SetAttribute ("MaxPackets", UintegerValue (1));
   echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
   echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
 
-  //节点0中安装客户端属性
+  //客户端 安装 到节点0
   ApplicationContainer clientApps = echoClient.Install (nodes.Get (0));
   clientApps.Start (Seconds (2.0));
   clientApps.Stop (Seconds (10.0));
 
   
+  //visualization
+  AnimationInterface anim("first.xml");
+  anim.SetConstantPosition(nodes.Get(0),1.0,2.0);
+  anim.SetConstantPosition(nodes.Get(1),20.0,20.0);
+
+
+
+
   //6.run
   Simulator::Run ();
   //7.del

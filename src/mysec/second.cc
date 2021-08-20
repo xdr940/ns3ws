@@ -22,6 +22,10 @@
 #include "ns3/applications-module.h"
 #include "ns3/ipv4-global-routing-helper.h"
 
+#include "ns3/netanim-module.h"
+
+
+
 // Default Network Topology
 //
 //       10.1.1.0
@@ -33,11 +37,14 @@
 
 using namespace ns3;
 
+using namespace std;
+
 NS_LOG_COMPONENT_DEFINE ("SecondScriptExample");
 
 int 
 main (int argc, char *argv[])
 {
+  cout<<"at mysec"<<endl;
   bool verbose = true;
   uint32_t nCsma = 3;
 
@@ -65,19 +72,19 @@ main (int argc, char *argv[])
 
 
 //2.channel & device
-    //2.1 p2p channel
+    //2.1 p2p channel define and config
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
-  pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
-    //2.2 p2p devices
+  pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));//传播时延                     
+    //2.2 p2p channel install, get p2p devices
   NetDeviceContainer p2pDevices;
   p2pDevices = pointToPoint.Install (p2pNodes);
   
-    //2.3 csma channle 
+    //2.3 csma channle define, and config
   CsmaHelper csma;
   csma.SetChannelAttribute ("DataRate", StringValue ("100Mbps"));
   csma.SetChannelAttribute ("Delay", TimeValue (NanoSeconds (6560)));
-    //2.4 csma devices
+    //2.4 csma channle install, get csma devices
   NetDeviceContainer csmaDevices;
   csmaDevices = csma.Install (csmaNodes);
 
@@ -100,17 +107,20 @@ main (int argc, char *argv[])
 
   
 //5. application install
+  //terminal define
   UdpEchoServerHelper echoServer (9);
-
+  //terminal install nodes,get apps
   ApplicationContainer serverApps = echoServer.Install (csmaNodes.Get (nCsma));
   serverApps.Start (Seconds (1.0));
   serverApps.Stop (Seconds (10.0));
-
-  UdpEchoClientHelper echoClient (csmaInterfaces.GetAddress (nCsma), 9);
+  
+  //terminal define
+  ns3::Ipv4Address ip = csmaInterfaces.GetAddress (nCsma);
+  UdpEchoClientHelper echoClient (ip, 9);
   echoClient.SetAttribute ("MaxPackets", UintegerValue (1));
   echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
   echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
-
+  
   ApplicationContainer clientApps = echoClient.Install (p2pNodes.Get (0));
   clientApps.Start (Seconds (2.0));
   clientApps.Stop (Seconds (10.0));
@@ -119,6 +129,14 @@ main (int argc, char *argv[])
 
   pointToPoint.EnablePcapAll ("second");
   csma.EnablePcap ("second", csmaDevices.Get (1), true);
+
+
+  AnimationInterface anim("./second.xml");
+  anim.SetConstantPosition(csmaNodes.Get(0),0.0,20.0);
+  anim.SetConstantPosition(csmaNodes.Get(1),10.0,20.0);
+  anim.SetConstantPosition(csmaNodes.Get(2),10.0,40.0);
+  anim.SetConstantPosition(csmaNodes.Get(3),0.0,40.0);
+
 
   Simulator::Run ();
   Simulator::Destroy ();

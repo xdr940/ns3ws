@@ -23,6 +23,7 @@
 #include "ns3/internet-module.h"
 #include "ns3/yans-wifi-helper.h"
 #include "ns3/ssid.h"
+#include "ns3/netanim-module.h"
 
 // Default Network Topology
 //
@@ -36,12 +37,14 @@
 //                                     LAN 10.1.2.0
 
 using namespace ns3;
-
+using namespace std;
 NS_LOG_COMPONENT_DEFINE ("ThirdScriptExample");
 
 int 
 main (int argc, char *argv[])
 {
+//0. 拓扑准备
+  cout<<"-> at my third"<<endl;
   bool verbose = true;
   uint32_t nCsma = 3;
   uint32_t nWifi = 3;
@@ -69,62 +72,76 @@ main (int argc, char *argv[])
       LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
     }
 
-  //两个点对点网络拓扑节点
+//1.p2p topology
+  //1.1两个点对点网络拓扑节点
   NodeContainer p2pNodes;
   p2pNodes.Create (2);
 
-  //信道设置
+  //1.2信道设置
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
   pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
 
-
+  //1.2 信道安装节点,get devices
   NetDeviceContainer p2pDevices;//创建设备
   p2pDevices = pointToPoint.Install (p2pNodes);//设备装载到信道两端
 
 
-  //构建拓扑
+//2. csma topology
+  //2.1 csma node
   NodeContainer csmaNodes;
   csmaNodes.Add (p2pNodes.Get (1));//get 访问1号节点并装载?
   csmaNodes.Create (nCsma);
 
-  //设置CSMA信道属性
+  //2.2 csma channel 设置CSMA信道属性
   CsmaHelper csma;
   csma.SetChannelAttribute ("DataRate", StringValue ("100Mbps"));
   csma.SetChannelAttribute ("Delay", TimeValue (NanoSeconds (6560)));
 
-  //csma 设备节点
+  //2.3 channel install nodes, get devices 设备节点
   NetDeviceContainer csmaDevices;
   csmaDevices = csma.Install (csmaNodes);
 
+//3 wifi topology
+  //3.1 wifi sta nodes
   NodeContainer wifiStaNodes;
   wifiStaNodes.Create (nWifi);//建立站设备数量
+  // 3.2 wifi ap nodes
   NodeContainer wifiApNode = p2pNodes.Get (0);//
 
   YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();
   YansWifiPhyHelper phy;
-  phy.SetChannel (channel.Create ());
+  phy.SetChannel (channel.Create ());//使用默认的物理层配置和信道模型
+
+
 
   WifiHelper wifi;
-  wifi.SetRemoteStationManager ("ns3::AarfWifiManager");
+  wifi.SetRemoteStationManager ("ns3::AarfWifiManager");//告诉助手类使用那种速率控制算法,这里为aarf
 
   WifiMacHelper mac;
-  Ssid ssid = Ssid ("ns-3-ssid");
+  Ssid ssid = Ssid ("ns-3-ssid");//创建 IEEE 802.11 服务集标识符 对象,用来设置MAC层的SSID属性值
   mac.SetType ("ns3::StaWifiMac",
                "Ssid", SsidValue (ssid),
                "ActiveProbing", BooleanValue (false));
-
+  
+  
+  // 3.6 devices
+  // channel install nodes,phy channle and mac, get devices
   NetDeviceContainer staDevices;
   staDevices = wifi.Install (phy, mac, wifiStaNodes);
 
+
+  //mac config
   mac.SetType ("ns3::ApWifiMac",
                "Ssid", SsidValue (ssid));
 
+  //ap devices
   NetDeviceContainer apDevices;
   apDevices = wifi.Install (phy, mac, wifiApNode);
 
+//wifi 移动性构建(卫星网络轨道运行)
   MobilityHelper mobility;
-
+  //
   mobility.SetPositionAllocator ("ns3::GridPositionAllocator",
                                  "MinX", DoubleValue (0.0),
                                  "MinY", DoubleValue (0.0),
@@ -140,11 +157,15 @@ main (int argc, char *argv[])
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (wifiApNode);
 
+
+// 3.协议安装
   InternetStackHelper stack;
   stack.Install (csmaNodes);
   stack.Install (wifiApNode);
   stack.Install (wifiStaNodes);
 
+
+//4. address assign to devices, get interfaces
   Ipv4AddressHelper address;
 
   address.SetBase ("10.1.1.0", "255.255.255.0");
@@ -159,6 +180,9 @@ main (int argc, char *argv[])
   address.Assign (staDevices);
   address.Assign (apDevices);
 
+
+
+// applications
   UdpEchoServerHelper echoServer (9);
 
   ApplicationContainer serverApps = echoServer.Install (csmaNodes.Get (nCsma));
@@ -175,6 +199,8 @@ main (int argc, char *argv[])
   clientApps.Start (Seconds (2.0));
   clientApps.Stop (Seconds (10.0));
 
+
+//8. 路由设置
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   Simulator::Stop (Seconds (10.0));
@@ -186,6 +212,17 @@ main (int argc, char *argv[])
       csma.EnablePcap ("third", csmaDevices.Get (0), true);
     }
 
+
+  AnimationInterface anim("./third.xml");
+  anim.SetConstantPosition(csmaNodes.Get(0),0.0,20.0);
+  anim.SetConstantPosition(csmaNodes.Get(1),10.0,20.0);
+  anim.SetConstantPosition(csmaNodes.Get(2),10.0,40.0);
+  anim.SetConstantPosition(csmaNodes.Get(3),0.0,40.0);
+  // anim.SetConstantPosition(csmaNodes.Get(4),40.0,20.0);
+
+
+
+// start toplogic
   Simulator::Run ();
   Simulator::Destroy ();
   return 0;
