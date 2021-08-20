@@ -22,37 +22,30 @@
 #include "ns3/applications-module.h"
 #include "ns3/ipv4-global-routing-helper.h"
 
-#include "ns3/netanim-module.h"
-
-
-
 // Default Network Topology
 //
 //       10.1.1.0
 // n0 -------------- n1   n2   n3   n4
 //    point-to-point  |    |    |    |
-//                    ================(csma)
+//                    ================
 //                      LAN 10.1.2.0
 
 
 using namespace ns3;
 
-using namespace std;
-
-NS_LOG_COMPONENT_DEFINE ("SecondScriptExample");
+NS_LOG_COMPONENT_DEFINE ("SecondScriptExample2");
 
 int 
-main2 (int argc, char *argv[])
+main (int argc, char *argv[])
 {
-  cout<<"at mysec"<<endl;
   bool verbose = true;
   uint32_t nCsma = 3;
 
   CommandLine cmd (__FILE__);
-  cmd.AddValue ("nCsma", "Number of \"extra\" CSMA nodes/devices", nCsma);//链接控制台输入参数
+  cmd.AddValue ("nCsma", "Number of \"extra\" CSMA nodes/devices", nCsma);
   cmd.AddValue ("verbose", "Tell echo applications to log if true", verbose);
 
-  cmd.Parse (argc,argv);//覆盖默认参数
+  cmd.Parse (argc,argv);
 
   if (verbose)
     {
@@ -60,42 +53,33 @@ main2 (int argc, char *argv[])
       LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
     }
 
-  nCsma = nCsma == 0 ? 1 : nCsma;//如果csma==0,赋值为1,否则为参数输入的
+  nCsma = nCsma == 0 ? 1 : nCsma;
 
-//1.nodes
   NodeContainer p2pNodes;
   p2pNodes.Create (2);
 
   NodeContainer csmaNodes;
-  csmaNodes.Add (p2pNodes.Get (1));//n1,添加到csma通讯节点中?
+  csmaNodes.Add (p2pNodes.Get (1));
   csmaNodes.Create (nCsma);
 
-
-//2.channel & device
-    //2.1 p2p channel define and config
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
-  pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));//传播时延                     
-    //2.2 p2p channel install, get p2p devices
+  pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
+
   NetDeviceContainer p2pDevices;
   p2pDevices = pointToPoint.Install (p2pNodes);
-  
-    //2.3 csma channle define, and config
+
   CsmaHelper csma;
   csma.SetChannelAttribute ("DataRate", StringValue ("100Mbps"));
   csma.SetChannelAttribute ("Delay", TimeValue (NanoSeconds (6560)));
-    //2.4 csma channle install, get csma devices
+
   NetDeviceContainer csmaDevices;
   csmaDevices = csma.Install (csmaNodes);
 
-
-//3.protocol  stack
   InternetStackHelper stack;
   stack.Install (p2pNodes.Get (0));
   stack.Install (csmaNodes);
 
-
-//4. ip add
   Ipv4AddressHelper address;
   address.SetBase ("10.1.1.0", "255.255.255.0");
   Ipv4InterfaceContainer p2pInterfaces;
@@ -105,38 +89,25 @@ main2 (int argc, char *argv[])
   Ipv4InterfaceContainer csmaInterfaces;
   csmaInterfaces = address.Assign (csmaDevices);
 
-  
-//5. application install
-  //terminal define
   UdpEchoServerHelper echoServer (9);
-  //terminal install nodes,get apps
+
   ApplicationContainer serverApps = echoServer.Install (csmaNodes.Get (nCsma));
   serverApps.Start (Seconds (1.0));
   serverApps.Stop (Seconds (10.0));
-  
-  //terminal define
-  ns3::Ipv4Address ip = csmaInterfaces.GetAddress (nCsma);
-  UdpEchoClientHelper echoClient (ip, 9);
+
+  UdpEchoClientHelper echoClient (csmaInterfaces.GetAddress (nCsma), 9);
   echoClient.SetAttribute ("MaxPackets", UintegerValue (1));
   echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
   echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
-  
+
   ApplicationContainer clientApps = echoClient.Install (p2pNodes.Get (0));
   clientApps.Start (Seconds (2.0));
   clientApps.Stop (Seconds (10.0));
 
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
-  pointToPoint.EnablePcapAll ("second");
-  csma.EnablePcap ("second", csmaDevices.Get (1), true);
-
-
-  AnimationInterface anim("./second.xml");
-  anim.SetConstantPosition(csmaNodes.Get(0),0.0,20.0);
-  anim.SetConstantPosition(csmaNodes.Get(1),10.0,20.0);
-  anim.SetConstantPosition(csmaNodes.Get(2),10.0,40.0);
-  anim.SetConstantPosition(csmaNodes.Get(3),0.0,40.0);
-
+  pointToPoint.EnablePcapAll ("oyeah");
+  csma.EnablePcap ("oyeah", csmaDevices.Get (1), true);
 
   Simulator::Run ();
   Simulator::Destroy ();
