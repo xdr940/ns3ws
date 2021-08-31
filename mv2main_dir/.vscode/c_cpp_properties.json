@@ -3,7 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/build/**"//递归查找头文件
+                "${workspaceFolder}/build/**",//递归查找头文件,这是从src里面直接复制过去的,库
+                "${workspaceFolder}/ns3ws"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

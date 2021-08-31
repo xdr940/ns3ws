@@ -35,6 +35,9 @@
 //                   point-to-point  |    |    |    |
 //                                   ================ //csma channel
 //                                     LAN 10.1.2.0
+//
+//n0-
+//
 
 using namespace ns3;
 using namespace std;
@@ -116,7 +119,7 @@ main (int argc, char *argv[])
 
 
   WifiHelper wifi;
-  wifi.SetRemoteStationManager ("ns3::AarfWifiManager");//告诉助手类使用那种速率控制算法,这里为aarf
+  wifi.SetRemoteStationManager ("ns3::AarfWifiManager");//告诉助手类使用那种速率控制算法,这里为aarf top-down 上有关于速率自适应算法的介绍, 类似于TCP额拥塞控制
 
 
   //3.3 channel setting
@@ -169,6 +172,9 @@ main (int argc, char *argv[])
 
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (wifiApNode);
+  mobility.Install (csmaNodes);
+
+
   std::cout<<"test2"<<std::endl;
 
 
@@ -187,7 +193,7 @@ main (int argc, char *argv[])
   Ipv4AddressHelper address;
 
 
-  address.SetBase ("10.1.1.0", "255.255.255.0");//x.x.x.0地址不会分配哦,特殊地址
+  address.SetBase ("10.1.1.0", "255.255.255.0");//x.x.x.0地址不会分配哦,特殊地址, 为网络地址
   Ipv4InterfaceContainer p2pInterfaces;
   p2pInterfaces = address.Assign (p2pDevices);
 
@@ -206,7 +212,7 @@ main (int argc, char *argv[])
 //---------------
 // applications install
 //----------------
-
+// n7 --> n4
   //服务端init
   UdpEchoServerHelper echoServer (9);// 监听来自9号端口的? the port the server will wait on for incoming packets
 
@@ -239,15 +245,22 @@ main (int argc, char *argv[])
     {
       pointToPoint.EnablePcapAll ("third");
       phy.EnablePcap ("third", apDevices.Get (0));
-      csma.EnablePcap ("third", csmaDevices.Get (0), true);
+      // generate 0-0, 0-1, 1-0 3 files
+
+
+      phy.EnablePcap ("third", staDevices.Get (0));// 5-0
+      phy.EnablePcap ("third", staDevices.Get (1));// 6-0
+      phy.EnablePcap ("third", staDevices.Get (2));// 7-0
+
+      // csma.EnablePcap ("third", csmaDevices.Get (0), true);
     }
 
 
   AnimationInterface anim("./third.xml");
   anim.SetConstantPosition(csmaNodes.Get(0),10.0,10.0);
   anim.SetConstantPosition(csmaNodes.Get(1),10.0,20.0);
-  anim.SetConstantPosition(csmaNodes.Get(2),20.0,20.0);
-  anim.SetConstantPosition(csmaNodes.Get(3),30.0,20.0);
+  anim.SetConstantPosition(csmaNodes.Get(2),20.0,30.0);
+  anim.SetConstantPosition(csmaNodes.Get(3),30.0,40.0);
 
 
 

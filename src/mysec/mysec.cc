@@ -42,7 +42,7 @@ using namespace std;
 NS_LOG_COMPONENT_DEFINE ("SecondScriptExample");
 
 int 
-main2 (int argc, char *argv[])
+main(int argc, char *argv[])
 {
   cout<<"at mysec"<<endl;
   bool verbose = true;

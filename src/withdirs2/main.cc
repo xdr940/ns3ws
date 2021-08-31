@@ -21,11 +21,9 @@
 // n0 -------------- n1
 //    point-to-point
 //
-#include"./include/sec.h"
+#include"sec.h"
 
-void foo2(){
-  printf("at foo2\n");
-}
+
 
 int main (int argc, char *argv[])
 {
