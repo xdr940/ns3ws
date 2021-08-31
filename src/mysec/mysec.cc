@@ -25,7 +25,6 @@
 #include "ns3/netanim-module.h"
 
 
-
 // Default Network Topology
 //
 //       10.1.1.0
@@ -95,7 +94,7 @@ main(int argc, char *argv[])
   stack.Install (csmaNodes);
 
 
-//4. ip add
+//4. ip addr
   Ipv4AddressHelper address;
   address.SetBase ("10.1.1.0", "255.255.255.0");
   Ipv4InterfaceContainer p2pInterfaces;

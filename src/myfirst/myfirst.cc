@@ -110,7 +110,7 @@ main (int argc, char *argv[])
 
   
   //visualization
-  AnimationInterface anim("first.xml");
+  AnimationInterface anim("./build/ns3ws/src/myfirst/myfirst.xml");
   anim.SetConstantPosition(nodes.Get(0),1.0,2.0);
   anim.SetConstantPosition(nodes.Get(1),20.0,20.0);
 
