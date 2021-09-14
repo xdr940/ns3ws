@@ -24,6 +24,7 @@
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/netanim-module.h"
+// #include <boost/filesystem.hpp>
 
 // Default Network Topology
 //
@@ -39,6 +40,17 @@ NS_LOG_COMPONENT_DEFINE ("FirstScriptExample");//定义日志组件
 int
 main (int argc, char *argv[])
 {
+
+    // boost::filesystem::path path = "/usr/share/cmake/modules";
+    // if(path.is_relative())
+    // {
+    //     std::cout << "Path is relative" << std::endl;
+    // }
+    // else
+    // {
+    //     std::cout << "Path is not relative" << std::endl;
+    // }
+
   cout<<"first example"<<endl;
   CommandLine cmd (__FILE__);// /home/roit/..../myfirst.cc
   cmd.Parse (argc, argv);
@@ -125,4 +137,3 @@ main (int argc, char *argv[])
 }
 
 //这里可以看看容器的概念,本次多次用到XXcontainer, 其实就是一次性安置多个类,但又比较数组等具有一些一般性以及其他属性.
-

@@ -23,8 +23,6 @@
 #include "ns3/ipv4-global-routing-helper.h"
 
 #include "ns3/netanim-module.h"
-
-
 // Default Network Topology
 //
 //       10.1.1.0

@@ -43,7 +43,8 @@ NS_LOG_COMPONENT_DEFINE ("FifthScriptExample");
 // We want to look at changes in the ns-3 TCP congestion window.  We need
 // to crank up a flow and hook the CongestionWindow attribute on the socket
 // of the sender.  Normally one would use an on-off application to generate a
-// flow, but this has a couple of problems.  First, the socket of the on-off 
+// flow, but this has a couple of problems.  
+//First, the socket of the on-off 
 // application is not created until Application Start time, so we wouldn't be 
 // able to hook the socket (now) at configuration time.  Second, even if we 
 // could arrange a call after start time, the socket is not public so we 
@@ -59,8 +60,7 @@ NS_LOG_COMPONENT_DEFINE ("FifthScriptExample");
 // install in the source node.
 // ===========================================================================
 //
-class MyApp : public Application 
-{
+class MyApp : public Application{
 public:
 
   MyApp ();
@@ -103,8 +103,7 @@ MyApp::~MyApp()
 }
 
 void
-MyApp::Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate)
-{
+MyApp::Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t nPackets, DataRate dataRate){
   m_socket = socket;
   m_peer = address;
   m_packetSize = packetSize;
@@ -113,8 +112,7 @@ MyApp::Setup (Ptr<Socket> socket, Address address, uint32_t packetSize, uint32_t
 }
 
 void
-MyApp::StartApplication (void)
-{
+MyApp::StartApplication (void){
   m_running = true;
   m_packetsSent = 0;
   m_socket->Bind ();
@@ -123,8 +121,7 @@ MyApp::StartApplication (void)
 }
 
 void 
-MyApp::StopApplication (void)
-{
+MyApp::StopApplication (void){
   m_running = false;
 
   if (m_sendEvent.IsRunning ())
@@ -139,8 +136,7 @@ MyApp::StopApplication (void)
 }
 
 void 
-MyApp::SendPacket (void)
-{
+MyApp::SendPacket (void){
   Ptr<Packet> packet = Create<Packet> (m_packetSize);
   m_socket->Send (packet);
 
@@ -169,18 +165,21 @@ CwndChange (uint32_t oldCwnd, uint32_t newCwnd)
 static void
 RxDrop (Ptr<const Packet> p)
 {
-  NS_LOG_UNCOND ("RxDrop at " << Simulator::Now ().GetSeconds ());
+  NS_LOG_UNCOND (Simulator::Now ().GetSeconds ()<<"\tRxDrop");
 }
+
 
 int 
 main (int argc, char *argv[])
 {
   CommandLine cmd (__FILE__);
   cmd.Parse (argc, argv);
-  
+
+  //link layer
+
   NodeContainer nodes;
   nodes.Create (2);
-
+  
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
   pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
@@ -192,13 +191,17 @@ main (int argc, char *argv[])
   em->SetAttribute ("ErrorRate", DoubleValue (0.00001));
   devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
+
+  // ip layer
   InternetStackHelper stack;
   stack.Install (nodes);
 
   Ipv4AddressHelper address;
   address.SetBase ("10.1.1.0", "255.255.255.252");
   Ipv4InterfaceContainer interfaces = address.Assign (devices);
+  
 
+  // tcp
   uint16_t sinkPort = 8080;
   Address sinkAddress (InetSocketAddress (interfaces.GetAddress (1), sinkPort));
   PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
