@@ -8,9 +8,8 @@
             "name": "waf Build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/ns3ws/src/myfirst/myfirst",//如果输入错误会执行上一个正确结果
+            "program": "/home/roit/programs_pro/ns-allinone-3.33/ns-3.33/build/scratch/myfirst",
             "args": [],
-            // "args": ["--nCsma=18"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

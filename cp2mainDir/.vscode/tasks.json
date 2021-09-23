@@ -1,19 +1,31 @@
 {
     "version": "2.0.0",
     "tasks": [
+       
         {
             "label": "waf configure",
             "type": "shell",
             "command": "waf configure",
-            "args": [""],
+            "args": [],
             "problemMatcher": [],
-            "group": "build"
         },
         {
             "label": "waf build",
             "type": "shell",
             "command": "waf",
-            "args": ["/home/roit/programs_pro/ns-allinone-3.33/ns-3.33/wscript"],
+            "args": [],
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "label": "waf run",
+            "type": "shell",
+            "command": "waf",
+            "args": [
+                "--run",
+                "${relativeFile}"//have to be relative path
+                // "${file}"
+            ],
             "problemMatcher": [],
             "group": "build"
         },

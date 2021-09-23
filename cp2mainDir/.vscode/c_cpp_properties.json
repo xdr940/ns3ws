@@ -3,15 +3,15 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/build/**",//递归查找头文件,这是从src里面直接复制过去的,库
-                "${workspaceFolder}/ns3ws"
+                // "${workspaceFolder}/build/**"//递归查找头文件
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu11",
             "cppStandard": "gnu++14",
-            "intelliSenseMode": "linux-gcc-x64"
+            "intelliSenseMode": "linux-gcc-x64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
         }
     ],
     "version": 4
-} 
+}

@@ -25,6 +25,7 @@
 #include "ns3/ssid.h"
 #include "ns3/netanim-module.h"
 
+
 // Default Network Topology
 //
 //   Wifi 10.1.3.0
@@ -43,7 +44,6 @@ NS_LOG_COMPONENT_DEFINE ("ThirdScriptExample");
 int 
 main (int argc, char *argv[])
 {
-
 
 
 
@@ -241,13 +241,14 @@ main (int argc, char *argv[])
 
   if (tracing == true)
     {
-      pointToPoint.EnablePcapAll ("third");
-      phy.EnablePcap ("third", apDevices.Get (0));
-      csma.EnablePcap ("third", csmaDevices.Get (0), true);
+      pointToPoint.EnablePcapAll ("./my3-p2p");
+      phy.EnablePcap ("./my3-phy", apDevices.Get (0));
+      csma.EnablePcap ("./my3-csma", csmaDevices.Get (0), true);
     }
 
 
-  AnimationInterface anim("./third.xml");
+
+  AnimationInterface anim("./build/ns3ws/src/my3/my3.xml");
   anim.SetConstantPosition(csmaNodes.Get(0),10.0,10.0);
   anim.SetConstantPosition(csmaNodes.Get(1),10.0,20.0);
   anim.SetConstantPosition(csmaNodes.Get(2),20.0,20.0);
