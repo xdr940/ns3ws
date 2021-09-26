@@ -8,7 +8,7 @@
             "name": "waf Build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/roit/programs_pro/ns-allinone-3.33/ns-3.33/build/scratch/myfirst",
+            "program": "/home/roit/programs_pro/ns-allinone-3.34/ns-3.34/build/ns3ws/src/my8",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

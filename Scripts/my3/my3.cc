@@ -25,6 +25,7 @@
 #include "ns3/ssid.h"
 #include "ns3/netanim-module.h"
 
+#include "my3.h"
 
 // Default Network Topology
 //
@@ -49,6 +50,8 @@ main (int argc, char *argv[])
 
 //0. 拓扑准备
   cout<<"-> at my third"<<endl;
+
+
   bool verbose = true;
   uint32_t nCsma = 3;
   uint32_t nWifi = 3;
@@ -105,7 +108,6 @@ main (int argc, char *argv[])
   //2.3 channel install nodes, get devices 设备节点
   NetDeviceContainer csmaDevices;
   csmaDevices = csma.Install (csmaNodes);
-
 
 //----------------------
 //3 wifi topology
