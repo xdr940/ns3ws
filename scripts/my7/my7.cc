@@ -20,10 +20,11 @@
 #include "ns3/internet-module.h"
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
+#include "ns3/stats-module.h"
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("SixthScriptExample");
+NS_LOG_COMPONENT_DEFINE ("SeventhScriptExample");
 
 // ===========================================================================
 //
@@ -57,6 +58,9 @@ NS_LOG_COMPONENT_DEFINE ("SixthScriptExample");
 // So first, we create a socket and do the trace connect on it; then we pass
 // this socket into the constructor of our simple application which we then
 // install in the source node.
+//
+// NOTE: If this example gets modified, do not forget to update the .png figure
+// in src/stats/docs/seventh-packet-byte-count.png
 // ===========================================================================
 //
 class MyApp : public Application
@@ -132,7 +136,14 @@ MyApp::StartApplication (void)
 {
   m_running = true;
   m_packetsSent = 0;
-  m_socket->Bind ();
+  if (InetSocketAddress::IsMatchingType (m_peer))
+    {
+      m_socket->Bind ();
+    }
+  else
+    {
+      m_socket->Bind6 ();
+    }
   m_socket->Connect (m_peer);
   SendPacket ();
 }
@@ -192,9 +203,12 @@ RxDrop (Ptr<PcapFileWrapper> file, Ptr<const Packet> p)
 int
 main (int argc, char *argv[])
 {
+  bool useV6 = false;
+
   CommandLine cmd (__FILE__);
+  cmd.AddValue ("useIpv6", "Use Ipv6", useV6);
   cmd.Parse (argc, argv);
-  
+
   NodeContainer nodes;
   nodes.Create (2);
 
@@ -212,13 +226,33 @@ main (int argc, char *argv[])
   InternetStackHelper stack;
   stack.Install (nodes);
 
-  Ipv4AddressHelper address;
-  address.SetBase ("10.1.1.0", "255.255.255.252");
-  Ipv4InterfaceContainer interfaces = address.Assign (devices);
-
   uint16_t sinkPort = 8080;
-  Address sinkAddress (InetSocketAddress (interfaces.GetAddress (1), sinkPort));
-  PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
+  Address sinkAddress;
+  Address anyAddress;
+  std::string probeType;
+  std::string tracePath;
+  if (useV6 == false)
+    {
+      Ipv4AddressHelper address;
+      address.SetBase ("10.1.1.0", "255.255.255.0");
+      Ipv4InterfaceContainer interfaces = address.Assign (devices);
+      sinkAddress = InetSocketAddress (interfaces.GetAddress (1), sinkPort);
+      anyAddress = InetSocketAddress (Ipv4Address::GetAny (), sinkPort);
+      probeType = "ns3::Ipv4PacketProbe";
+      tracePath = "/NodeList/*/$ns3::Ipv4L3Protocol/Tx";
+    }
+  else
+    {
+      Ipv6AddressHelper address;
+      address.SetBase ("2001:0000:f00d:cafe::", Ipv6Prefix (64));
+      Ipv6InterfaceContainer interfaces = address.Assign (devices);
+      sinkAddress = Inet6SocketAddress (interfaces.GetAddress (1,1), sinkPort);
+      anyAddress = Inet6SocketAddress (Ipv6Address::GetAny (), sinkPort);
+      probeType = "ns3::Ipv6PacketProbe";
+      tracePath = "/NodeList/*/$ns3::Ipv6L3Protocol/Tx";
+    }
+
+  PacketSinkHelper packetSinkHelper ("ns3::TcpSocketFactory", anyAddress);
   ApplicationContainer sinkApps = packetSinkHelper.Install (nodes.Get (1));
   sinkApps.Start (Seconds (0.));
   sinkApps.Stop (Seconds (20.));
@@ -232,12 +266,49 @@ main (int argc, char *argv[])
   app->SetStopTime (Seconds (20.));
 
   AsciiTraceHelper asciiTraceHelper;
-  Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream ("sixth.cwnd");
+  Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream ("seventh.cwnd");
   ns3TcpSocket->TraceConnectWithoutContext ("CongestionWindow", MakeBoundCallback (&CwndChange, stream));
 
   PcapHelper pcapHelper;
-  Ptr<PcapFileWrapper> file = pcapHelper.CreateFile ("sixth.pcap", std::ios::out, PcapHelper::DLT_PPP);
+  Ptr<PcapFileWrapper> file = pcapHelper.CreateFile ("seventh.pcap", std::ios::out, PcapHelper::DLT_PPP);
   devices.Get (1)->TraceConnectWithoutContext ("PhyRxDrop", MakeBoundCallback (&RxDrop, file));
+
+  // Use GnuplotHelper to plot the packet byte count over time
+  GnuplotHelper plotHelper;
+
+  // Configure the plot.  The first argument is the file name prefix
+  // for the output files generated.  The second, third, and fourth
+  // arguments are, respectively, the plot title, x-axis, and y-axis labels
+  plotHelper.ConfigurePlot ("seventh-packet-byte-count",
+                            "Packet Byte Count vs. Time",
+                            "Time (Seconds)",
+                            "Packet Byte Count");
+
+  // Specify the probe type, trace source path (in configuration namespace), and
+  // probe output trace source ("OutputBytes") to plot.  The fourth argument
+  // specifies the name of the data series label on the plot.  The last
+  // argument formats the plot by specifying where the key should be placed.
+  plotHelper.PlotProbe (probeType,
+                        tracePath,
+                        "OutputBytes",
+                        "Packet Byte Count",
+                        GnuplotAggregator::KEY_BELOW);
+
+  // Use FileHelper to write out the packet byte count over time
+  FileHelper fileHelper;
+
+  // Configure the file to be written, and the formatting of output data.
+  fileHelper.ConfigureFile ("seventh-packet-byte-count",
+                            FileAggregator::FORMATTED);
+
+  // Set the labels for this formatted output file.
+  fileHelper.Set2dFormat ("Time (Seconds) = %.3e\tPacket Byte Count = %.0f");
+
+  // Specify the probe type, trace source path (in configuration namespace), and
+  // probe output trace source ("OutputBytes") to write.
+  fileHelper.WriteProbe (probeType,
+                         tracePath,
+                         "OutputBytes");
 
   Simulator::Stop (Seconds (20));
   Simulator::Run ();
