@@ -31,12 +31,15 @@
 #include <stdexcept>
 
 #include "ns3/basic-simulation.h"
+
+
 #include "ns3/tcp-flow-scheduler.h"
 #include "ns3/udp-burst-scheduler.h"
+// #include "ns3/pingmesh-scheduler.h"
 
-#include "ns3/pingmesh-scheduler.h"
+
 #include "ns3/topology-satellite-network.h"
-#include "ns3/tcp-optimizer.h"
+// #include "ns3/tcp-optimizer.h"
 #include "ns3/arbiter-single-forward-helper.h"
 #include "ns3/ipv4-arbiter-routing-helper.h"
 #include "ns3/gsl-if-bandwidth-helper.h"
@@ -62,17 +65,29 @@ int main(int argc, char *argv[]) {
     // Load basic simulation environment
     Ptr<BasicSimulation> basicSimulation = CreateObject<BasicSimulation>(run_dir);
 
+    // Read topology, and install routing arbiters
+    Ptr<TopologySatelliteNetwork> topology = CreateObject<TopologySatelliteNetwork>(basicSimulation, Ipv4ArbiterRoutingHelper());
+    
+
+
+
+
     // Setting socket type
     Config::SetDefault ("ns3::TcpL4Protocol::SocketType", StringValue ("ns3::" + basicSimulation->GetConfigParamOrFail("tcp_socket_type")));
 
     // Optimize TCP
     TcpOptimizer::OptimizeBasic(basicSimulation);
-
-    // Read topology, and install routing arbiters
-    Ptr<TopologySatelliteNetwork> topology = CreateObject<TopologySatelliteNetwork>(basicSimulation, Ipv4ArbiterRoutingHelper());
+   
+    
     ArbiterSingleForwardHelper arbiterHelper(basicSimulation, topology->GetNodes());
     GslIfBandwidthHelper gslIfBandwidthHelper(basicSimulation, topology->GetNodes());
 
+
+
+
+
+
+// scedules 
     // Schedule flows
     TcpFlowScheduler tcpFlowScheduler(basicSimulation, topology); // Requires enable_tcp_flow_scheduler=true
 
@@ -81,6 +96,8 @@ int main(int argc, char *argv[]) {
 
     // Schedule pings
     PingmeshScheduler pingmeshScheduler(basicSimulation, topology); // Requires enable_pingmesh_scheduler=true
+
+
 
     // Run simulation
     basicSimulation->Run();

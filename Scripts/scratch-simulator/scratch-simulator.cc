@@ -13,7 +13,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
+#include<iostream>
 #include "ns3/core-module.h"
 #include "ns3/roit-module.h"
 using namespace ns3;
@@ -30,6 +30,7 @@ main (int argc, char *argv[])
   // cv::Mat frame;
 
   my_func();
+  std::cout<<"aaa"<<std::endl;
 
   Simulator::Run ();
   Simulator::Destroy ();

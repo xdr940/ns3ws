@@ -1,0 +1,3 @@
+[submodule "sn_doc"]
+	path = sn_doc
+	url = https://github.com/scuaa-fc/sn_doc
